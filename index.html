@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encarte PRO - Platinum Fix Final</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Passion+One:wght@400;700;900&family=Poppins:wght@400;700;900&family=Righteous&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <style>
+        :root {
+            --cor-fundo-prod: rgba(255, 255, 255, 1);
+            --cor-borda-prod: rgba(255, 204, 0, 1);
+            --cor-texto-nome: #333333;
+            --cor-texto-legenda: #ffffff;
+            --cor-texto-preco: #ffffff;
+            --cor-fundo-box-preco: #d90000; 
+            --fonte-nome: 'Montserrat', sans-serif;
+            --fonte-preco: 'Anton', sans-serif;
+            --sz-nome: 14px;
+            --sz-preco: 28px;
+            --dist-nome: -5px;
+            --dist-preco: -10px;
+            --tamanho-imagem-prod: 90%;
+            --padding-topo-grid: 230px;
+            --gap-produtos: 12px;
+            --grid-cols: 3; --grid-rows: 3;
+            --tamanho-selo: 80px; --selo-x: -10px; --selo-y: -10px; --selo-rot: -10deg;
+            --encarte-height: 960px;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; display: flex; gap: 20px; padding: 20px; background: #e9ecef; margin: 0; height: 100vh; overflow: hidden; }
+        .painel { width: 380px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; flex-shrink: 0; height: 95vh; }
+        h3 { margin: 15px 0 8px 0; color: #2c3e50; font-size: 11px; border-bottom: 2px solid #f0f0f0; padding-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 10px; color: #444; }
+        .form-group input, .form-group select { width: 100%; padding: 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        button { color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 4px; font-weight: bold; margin-bottom: 8px; transition: 0.2s; }
+        .btn-add { background: #007bff; }
+        .btn-exportar { background: #28a745; font-size: 16px; padding: 15px; margin-top: 10px; }
+        .grid-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .prancheta-container { flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 20px; background: #ced4da; }
+        
+        #encarte {
+            width: 540px; height: var(--encarte-height);
+            background-color: #fff; 
+            background-size: 100% 100%; /* Garante que o fundo cubra tudo */
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative; padding: var(--padding-topo-grid) 25px 50px 25px; box-sizing: border-box; 
+        }
+
+        #grid-produtos { 
+            display: grid; grid-template-columns: repeat(var(--grid-cols), 1fr); grid-template-rows: repeat(var(--grid-rows), 1fr);
+            gap: var(--gap-produtos); width: 100%; height: 100%; align-content: center;
+        }
+
+        .produto-item {
+            background: var(--cor-fundo-prod); border: 2px solid var(--cor-borda-prod);
+            border-radius: 10px; padding: 5px; text-align: center; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-sizing: border-box;
+            height: 100%; overflow: hidden;
+        }
+
+        .produto-nome { 
+            font-family: var(--fonte-nome); font-size: var(--sz-nome); font-weight: 900; 
+            text-transform: uppercase; color: var(--cor-texto-nome); line-height: 1.1; width: 100%; 
+            margin-bottom: var(--dist-nome); min-height: 24px; display: flex; align-items: center; justify-content: center; z-index: 2;
+        }
+        
+        .produto-img-wrapper { width: var(--tamanho-imagem-prod); flex-grow: 1; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; }
+        
+        .area-precos-flex { 
+            display: flex; width: 100%; justify-content: center; align-items: flex-end;
+            gap: 4px; margin-top: var(--dist-preco); z-index: 2; padding-bottom: 2px;
+        }
+
+        .bloco-preco { 
+            display: inline-flex; flex-direction: column; align-items: center; 
+            background-color: var(--cor-fundo-box-preco); border-radius: 6px; 
+            padding: 2px 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); 
+            min-width: 40%; max-width: 48%;
+        }
+
+        .label-variacao { font-size: 7px; font-weight: 900; text-transform: uppercase; color: var(--cor-texto-legenda); margin-bottom: -2px; }
+        .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; }
+        .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
+
+        .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
+        .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; pointer-events: none; }
+        .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 4px black; font-size: 11px; font-weight: bold; cursor: text; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="painel">
+        <button onclick="desfazer()" style="background:#ffc107; color:black;">↩️ Desfazer</button>
+
+        <h3>1. Memória</h3>
+        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
+        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
+
+        <h3>2. Layout Global</h3>
+        <div class="grid-dupla">
+            <select id="adj-grid" onchange="mudarGrid()">
+                <option value="2x2">Grade 2x2</option>
+                <option value="3x2">Grade 3x2</option>
+                <option value="3x3" selected>Grade 3x3</option>
+            </select>
+            <select id="adj-formato" onchange="mudarFormato()">
+                <option value="story">Story</option>
+                <option value="feed">Feed</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Padding Top (Altura Grade):</label><input type="range" id="range-padding-top" min="50" max="500" value="230" oninput="aplicarDesign()"></div>
+        <div class="form-group"><label>Espaço entre Cards (Gap):</label><input type="range" id="range-gap" min="0" max="50" value="12" oninput="aplicarDesign()"></div>
+        <div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
+
+        <h3>3. Dados do Produto</h3>
+        <input type="text" id="in-nome" placeholder="Nome do Produto" style="width:96%; padding:7px; margin-bottom:5px;">
+        <div class="grid-dupla">
+            <input type="text" id="in-p1" placeholder="Preço 1">
+            <input type="text" id="in-l1" placeholder="Leg. 1">
+        </div>
+        <div class="grid-dupla" style="margin-top:5px">
+            <input type="text" id="in-p2" placeholder="Preço 2">
+            <input type="text" id="in-l2" placeholder="Leg. 2">
+        </div>
+        <div class="grid-dupla" style="margin-top:10px">
+            <div class="form-group"><label>Foto:</label><input type="file" id="in-img" accept="image/*"></div>
+            <div class="form-group"><label>Selo:</label><input type="file" id="in-selo" accept="image/*"></div>
+        </div>
+        <button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
+
+        <h3>4. Ajustes do Selo</h3>
+        <div class="grid-dupla">
+            <input type="range" id="s-size" min="30" max="250" value="80" oninput="aplicarDesign()">
+            <input type="range" id="s-rot" min="-180" max="180" value="-10" oninput="aplicarDesign()">
+        </div>
+        <div class="grid-dupla">
+            <input type="range" id="s-x" min="-100" max="200" value="-10" oninput="aplicarDesign()">
+            <input type="range" id="s-y" min="-100" max="200" value="-10" oninput="aplicarDesign()">
+        </div>
+
+        <h3>5. Cores e Transparência</h3>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Nome:</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Preço:</label><input type="color" id="clr-preco" value="#ffffff" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Box:</label><input type="color" id="clr-box" value="#d90000" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Card:</label><input type="color" id="clr-card" value="#ffffff" oninput="aplicarDesign()"><input type="range" id="op-card" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Borda:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+        </div>
+
+        <h3>6. Tipografia e Eixos</h3>
+        <div class="form-group">
+            <select id="f-nome-tipo" onchange="aplicarDesign()">
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <select id="f-preco-tipo" onchange="aplicarDesign()">
+                <option value="'Anton'">Anton</option><option value="'Luckiest Guy'">Luckiest Guy</option><option value="'Bangers'">Bangers</option><option value="'Righteous'">Righteous</option>
+            </select>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Tam Nome:</label><input type="range" id="range-sz-nome" min="10" max="35" value="14" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Nome p/ Foto:</label><input type="range" id="range-dist-nome" min="-40" max="20" value="-5" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Preço p/ Foto:</label><input type="range" id="range-dist-preco" min="-40" max="20" value="-10" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
+
+        <button class="btn-exportar" onclick="exportar()">🚀 BAIXAR ULTRA HD</button>
+    </div>
+
+    <div class="prancheta-container">
+        <div id="encarte" class="bg-area">
+            <div id="grid-produtos"></div>
+            <div class="rodape-encarte" contenteditable="true" spellcheck="false">OFERTAS VÁLIDAS ENQUANTO DURAREM OS ESTOQUES.</div>
+        </div>
+    </div>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('encarte_v_bg_fix')) || [];
+        let hist = [], imgT = null, seloT = null;
+
+        window.onload = () => {
+            renderMemoria();
+            new Sortable(document.getElementById('grid-produtos'), { animation: 150, onStart: () => hist.push(document.getElementById('grid-produtos').innerHTML) });
+            aplicarDesign();
+        };
+
+        const ler = (f) => new Promise(res => { if(!f) return res(null); const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
+        const hexRgb = (h) => { let b = parseInt(h.replace('#', ''), 16); return `${(b>>16)&255}, ${(b>>8)&255}, ${b&255}`; };
+
+        // NOVA FUNÇÃO PARA TROCAR FUNDO
+        async function trocarFundo(input) {
+            const file = input.files[0];
+            if (file) {
+                const url = await ler(file);
+                document.getElementById('encarte').style.backgroundImage = `url('${url}')`;
+            }
+        }
+
+        function aplicarDesign() {
+            const s = document.documentElement.style;
+            s.setProperty('--cor-fundo-prod', `rgba(${hexRgb(document.getElementById('clr-card').value)}, ${document.getElementById('op-card').value})`);
+            s.setProperty('--cor-borda-prod', `rgba(${hexRgb(document.getElementById('clr-borda').value)}, ${document.getElementById('op-borda').value})`);
+            s.setProperty('--cor-texto-nome', document.getElementById('clr-nome').value);
+            s.setProperty('--cor-texto-legenda', document.getElementById('clr-leg').value);
+            s.setProperty('--cor-texto-preco', document.getElementById('clr-preco').value);
+            s.setProperty('--cor-fundo-box-preco', document.getElementById('clr-box').value);
+            s.setProperty('--fonte-nome', document.getElementById('f-nome-tipo').value);
+            s.setProperty('--fonte-preco', document.getElementById('f-preco-tipo').value);
+            s.setProperty('--sz-nome', document.getElementById('range-sz-nome').value + 'px');
+            s.setProperty('--sz-preco', document.getElementById('range-sz-preco').value + 'px');
+            s.setProperty('--dist-nome', document.getElementById('range-dist-nome').value + 'px');
+            s.setProperty('--dist-preco', document.getElementById('range-dist-preco').value + 'px');
+            s.setProperty('--padding-topo-grid', document.getElementById('range-padding-top').value + 'px');
+            s.setProperty('--gap-produtos', document.getElementById('range-gap').value + 'px');
+            s.setProperty('--tamanho-imagem-prod', document.getElementById('range-img-sz').value + '%');
+            s.setProperty('--tamanho-selo', document.getElementById('s-size').value + 'px');
+            s.setProperty('--selo-x', document.getElementById('s-x').value + 'px');
+            s.setProperty('--selo-y', document.getElementById('s-y').value + 'px');
+            s.setProperty('--selo-rot', document.getElementById('s-rot').value + 'deg');
+        }
+
+        function mudarGrid() {
+            const g = document.getElementById('adj-grid').value;
+            const s = document.documentElement.style;
+            if(g === '2x2') { s.setProperty('--grid-cols', '2'); s.setProperty('--grid-rows', '2'); }
+            else if(g === '3x2') { s.setProperty('--grid-cols', '3'); s.setProperty('--grid-rows', '2'); }
+            else { s.setProperty('--grid-cols', '3'); s.setProperty('--grid-rows', '3'); }
+        }
+
+        function mudarFormato() {
+            const f = document.getElementById('adj-formato').value;
+            document.documentElement.style.setProperty('--encarte-height', f === 'story' ? '960px' : '675px');
+        }
+
+        async function criarProduto() {
+            hist.push(document.getElementById('grid-produtos').innerHTML);
+            const n = document.getElementById('in-nome').value, p1 = document.getElementById('in-p1').value, l1 = document.getElementById('in-l1').value, p2 = document.getElementById('in-p2').value, l2 = document.getElementById('in-l2').value;
+            const uI = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : (imgT || 'https://via.placeholder.com/150');
+            const uS = document.getElementById('in-selo').files[0] ? await ler(document.getElementById('in-selo').files[0]) : seloT;
+            
+            if(!n || !p1) return alert("Nome e Preço são obrigatórios!");
+
+            const div = document.createElement('div'); div.className = 'produto-item';
+            div.innerHTML = `<button class="btn-excluir" onclick="this.parentElement.remove()">✕</button>
+                ${uS ? `<img src="${uS}" class="produto-selo-img">` : ''}
+                <div class="produto-nome" contenteditable="true">${n}</div>
+                <div class="produto-img-wrapper" style="background-image: url('${uI}')"></div>
+                <div class="area-precos-flex">
+                    <div class="bloco-preco"><div class="label-variacao" contenteditable="true">${l1}</div><div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p1}</div></div>
+                    ${p2 ? `<div class="bloco-preco"><div class="label-variacao" contenteditable="true">${l2}</div><div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p2}</div></div>` : ''}
+                </div>`;
+            document.getElementById('grid-produtos').appendChild(div);
+
+            document.getElementById('in-nome').value = '';
+            document.getElementById('in-p1').value = '';
+            document.getElementById('in-p2').value = '';
+            document.getElementById('in-l1').value = '';
+            document.getElementById('in-l2').value = '';
+            document.getElementById('in-img').value = '';
+            imgT = null;
+        }
+
+        async function salvarNaMemoria() {
+            const n = document.getElementById('in-nome').value; if(!n) return alert("Dê um nome!");
+            const i = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : imgT;
+            const s = document.getElementById('in-selo').files[0] ? await ler(document.getElementById('in-selo').files[0]) : seloT;
+            db.push({ n, p1: document.getElementById('in-p1').value, l1: document.getElementById('in-l1').value, i, s });
+            localStorage.setItem('encarte_v_bg_fix', JSON.stringify(db)); renderMemoria(); alert("Salvo!");
+        }
+
+        function renderMemoria() {
+            const s = document.getElementById('select-memoria'); s.innerHTML = '<option value="">Puxar da Memória...</option>';
+            db.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p.n; s.appendChild(o); });
+        }
+
+        function carregarDaMemoria() {
+            const i = document.getElementById('select-memoria').value; if(i === "") return;
+            const p = db[i]; document.getElementById('in-nome').value = p.n; document.getElementById('in-p1').value = p.p1;
+            document.getElementById('in-l1').value = p.l1; imgT = p.i; seloT = p.s;
+        }
+
+        function exportar() {
+            const el = document.getElementById('encarte');
+            const btns = document.querySelectorAll('.btn-excluir');
+            btns.forEach(b => b.style.display = 'none');
+            html2canvas(el, { scale: 4.5, useCORS: true }).then(c => {
+                const a = document.createElement('a'); a.download = 'encarte-final.png'; a.href = c.toDataURL(); a.click();
+                btns.forEach(b => b.style.display = 'block');
+            });
+        }
+        function desfazer() { if(hist.length > 0) document.getElementById('grid-produtos').innerHTML = hist.pop(); }
+    </script>
+</body>
+</html>
