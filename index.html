@@ -24,8 +24,8 @@
             --fonte-preco: 'Anton', sans-serif;
             --sz-nome: 14px;
             --sz-preco: 28px;
-            --dist-nome: -5px;
-            --dist-preco: -10px;
+            --dist-nome: 0px;
+            --dist-preco: 0px;
             --tamanho-imagem-prod: 90%;
             --padding-topo-grid: 230px;
             --gap-produtos: 12px;
@@ -50,7 +50,7 @@
         #encarte {
             width: 540px; height: var(--encarte-height);
             background-color: #fff; 
-            background-size: 100% 100%; /* Garante que o fundo cubra tudo */
+            background-size: 100% 100%; 
             background-position: center;
             background-repeat: no-repeat;
             position: relative; padding: var(--padding-topo-grid) 25px 50px 25px; box-sizing: border-box; 
@@ -71,14 +71,16 @@
         .produto-nome { 
             font-family: var(--fonte-nome); font-size: var(--sz-nome); font-weight: 900; 
             text-transform: uppercase; color: var(--cor-texto-nome); line-height: 1.1; width: 100%; 
-            margin-bottom: var(--dist-nome); min-height: 24px; display: flex; align-items: center; justify-content: center; z-index: 2;
+            min-height: 24px; display: flex; align-items: center; justify-content: center; z-index: 2;
+            transform: translateY(var(--dist-nome));
         }
         
         .produto-img-wrapper { width: var(--tamanho-imagem-prod); flex-grow: 1; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; }
         
         .area-precos-flex { 
             display: flex; width: 100%; justify-content: center; align-items: flex-end;
-            gap: 4px; margin-top: var(--dist-preco); z-index: 2; padding-bottom: 2px;
+            gap: 4px; z-index: 2; padding-bottom: 2px;
+            transform: translateY(var(--dist-preco));
         }
 
         .bloco-preco { 
@@ -94,7 +96,7 @@
 
         .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
         .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; pointer-events: none; }
-        .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; cursor: text; outline: none; font-family: var(--dist-nome); }
+        .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; cursor: text; outline: none; font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
 <body>
@@ -178,8 +180,8 @@
             <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
         </div>
         <div class="grid-dupla">
-            <div class="form-group"><label>Nome p/ Foto:</label><input type="range" id="range-dist-nome" min="-40" max="20" value="-5" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Preço p/ Foto:</label><input type="range" id="range-dist-preco" min="-40" max="20" value="-10" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Eixo Y Nome:</label><input type="range" id="range-dist-nome" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Eixo Y Preço:</label><input type="range" id="range-dist-preco" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
         </div>
         <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
 
@@ -206,7 +208,6 @@
         const ler = (f) => new Promise(res => { if(!f) return res(null); const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
         const hexRgb = (h) => { let b = parseInt(h.replace('#', ''), 16); return `${(b>>16)&255}, ${(b>>8)&255}, ${b&255}`; };
 
-        // NOVA FUNÇÃO PARA TROCAR FUNDO
         async function trocarFundo(input) {
             const file = input.files[0];
             if (file) {
