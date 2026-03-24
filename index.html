@@ -21,7 +21,7 @@
             --cor-texto-preco: #ffffff;
             --cor-fundo-box-preco: #d90000; 
             --fonte-nome: 'Montserrat', sans-serif;
-            --fonte-preco: 'Bebas', sans-serif;
+            --fonte-preco: 'Anton', sans-serif;
             --sz-nome: 14px;
             --sz-preco: 28px;
             --dist-nome: -5px;
@@ -84,7 +84,7 @@
         .bloco-preco { 
             display: inline-flex; flex-direction: column; align-items: center; 
             background-color: var(--cor-fundo-box-preco); border-radius: 6px; 
-            padding: 2px 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); 
+            padding: 2px 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); 
             min-width: 40%; max-width: 48%;
         }
 
@@ -94,7 +94,7 @@
 
         .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
         .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; pointer-events: none; }
-        .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 4px black; font-size: 11px; font-weight: bold; cursor: text; outline: none; }
+        .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; cursor: text; outline: none; font-family: var(--dist-nome); }
     </style>
 </head>
 <body>
@@ -170,7 +170,7 @@
         </div>
         <div class="form-group">
             <select id="f-preco-tipo" onchange="aplicarDesign()">
-                <option value="'Anton'">Anton</option><option value="'Luckiest Guy'">Luckiest Guy</option><option value="'Bangers'">Bangers</option><option value="'Righteous'">Righteous</option>
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
             </select>
         </div>
         <div class="grid-dupla">
@@ -183,13 +183,13 @@
         </div>
         <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
 
-        <button class="btn-exportar" onclick="exportar()">🚀 BAIXAR ULTRA HD</button>
+        <button class="btn-exportar" onclick="exportar()">🚀 BAIXAR IMG</button>
     </div>
 
     <div class="prancheta-container">
         <div id="encarte" class="bg-area">
             <div id="grid-produtos"></div>
-            <div class="rodape-encarte" contenteditable="true" spellcheck="false">OFERTAS VÁLIDAS ENQUANTO DURAREM OS ESTOQUES.</div>
+            <div class="rodape-encarte" contenteditable="true" spellcheck="false">OFERTAS VÁLIDAS ATÉ 00/00/0000 OU ENQUANTO DURAREM OS ESTOQUES.</div>
         </div>
     </div>
 
