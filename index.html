@@ -75,7 +75,12 @@
             transform: translateY(var(--dist-nome));
         }
         
-        .produto-img-wrapper { width: var(--tamanho-imagem-prod); flex-grow: 1; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; }
+        .produto-img-wrapper { 
+            width: var(--tamanho-imagem-prod); flex-grow: 1; background-size: contain; 
+            background-position: center; background-repeat: no-repeat; z-index: 1; 
+            cursor: pointer; transition: opacity 0.2s;
+        }
+        .produto-img-wrapper:hover { opacity: 0.8; }
         
         .area-precos-flex { 
             display: flex; width: 100%; justify-content: center; align-items: flex-end;
@@ -84,22 +89,29 @@
         }
 
         .bloco-preco { 
-            display: inline-flex; flex-direction: column; align-items: center; 
+            display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
             background-color: var(--cor-fundo-box-preco); border-radius: 6px; 
             padding: 2px 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); 
             min-width: 40%; max-width: 48%;
         }
 
+        /* REGRA NOVA: Esconde a legenda se ela estiver vazia, colando a caixa no preço */
         .label-variacao { font-size: 7px; font-weight: 900; text-transform: uppercase; color: var(--cor-texto-legenda); margin-bottom: -2px; }
-        .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; }
+        .label-variacao:empty { display: none; }
+        
+        .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; line-height: 1.1; }
         .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
 
         .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
+        .btn-duplicar { position: absolute; top: -5px; left: -5px; background: #28a745; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
+
         .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; pointer-events: none; }
         .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; cursor: text; outline: none; font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
 <body>
+
+    <input type="file" id="input-trocar-img" accept="image/*" style="display: none;" onchange="efetivarTrocaImagem(this)">
 
     <div class="painel">
         <button onclick="desfazer()" style="background:#ffc107; color:black;">↩️ Desfazer</button>
@@ -128,10 +140,10 @@
         <input type="text" id="in-nome" placeholder="Nome do Produto" style="width:96%; padding:7px; margin-bottom:5px;">
         <div class="grid-dupla">
             <input type="text" id="in-p1" placeholder="Preço 1">
-            <input type="text" id="in-l1" placeholder="Leg. 1">
+            <input type="text" id="in-l1" placeholder="Leg. 1 (Ex: un)">
         </div>
         <div class="grid-dupla" style="margin-top:5px">
-            <input type="text" id="in-p2" placeholder="Preço 2">
+            <input type="text" id="in-p2" placeholder="Preço 2 (Opcional)">
             <input type="text" id="in-l2" placeholder="Leg. 2">
         </div>
         <div class="grid-dupla" style="margin-top:10px">
@@ -198,6 +210,7 @@
     <script>
         let db = JSON.parse(localStorage.getItem('encarte_v_bg_fix')) || [];
         let hist = [], imgT = null, seloT = null;
+        let divImagemAlvo = null; 
 
         window.onload = () => {
             renderMemoria();
@@ -214,6 +227,28 @@
                 const url = await ler(file);
                 document.getElementById('encarte').style.backgroundImage = `url('${url}')`;
             }
+        }
+
+        function prepararTrocaImagem(elemento) {
+            divImagemAlvo = elemento;
+            document.getElementById('input-trocar-img').click();
+        }
+
+        async function efetivarTrocaImagem(input) {
+            const file = input.files[0];
+            if (file && divImagemAlvo) {
+                hist.push(document.getElementById('grid-produtos').innerHTML); 
+                const url = await ler(file);
+                divImagemAlvo.style.backgroundImage = `url('${url}')`;
+            }
+            input.value = ''; 
+            divImagemAlvo = null;
+        }
+
+        function duplicarProduto(btn) {
+            hist.push(document.getElementById('grid-produtos').innerHTML);
+            const clone = btn.parentElement.cloneNode(true);
+            document.getElementById('grid-produtos').appendChild(clone);
         }
 
         function aplicarDesign() {
@@ -247,27 +282,38 @@
             else { s.setProperty('--grid-cols', '3'); s.setProperty('--grid-rows', '3'); }
         }
 
-        function mudarFormato() {
-            const f = document.getElementById('adj-formato').value;
-            document.documentElement.style.setProperty('--encarte-height', f === 'story' ? '960px' : '675px');
-        }
-
         async function criarProduto() {
             hist.push(document.getElementById('grid-produtos').innerHTML);
-            const n = document.getElementById('in-nome').value, p1 = document.getElementById('in-p1').value, l1 = document.getElementById('in-l1').value, p2 = document.getElementById('in-p2').value, l2 = document.getElementById('in-l2').value;
+            const n = document.getElementById('in-nome').value;
+            const p1 = document.getElementById('in-p1').value;
+            const l1 = document.getElementById('in-l1').value.trim(); // Limpa espaços em branco
+            const p2 = document.getElementById('in-p2').value;
+            const l2 = document.getElementById('in-l2').value.trim(); // Limpa espaços em branco
+            
             const uI = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : (imgT || 'https://via.placeholder.com/150');
             const uS = document.getElementById('in-selo').files[0] ? await ler(document.getElementById('in-selo').files[0]) : seloT;
             
             if(!n || !p1) return alert("Nome e Preço são obrigatórios!");
 
             const div = document.createElement('div'); div.className = 'produto-item';
-            div.innerHTML = `<button class="btn-excluir" onclick="this.parentElement.remove()">✕</button>
+            
+            // CONSTRUÇÃO CONDICIONAL DA LEGENDA: Só renderiza a div se l1 ou l2 tiverem texto
+            div.innerHTML = `
+                <button class="btn-duplicar" onclick="duplicarProduto(this)" title="Duplicar">✚</button>
+                <button class="btn-excluir" onclick="this.parentElement.remove()" title="Excluir">✕</button>
                 ${uS ? `<img src="${uS}" class="produto-selo-img">` : ''}
                 <div class="produto-nome" contenteditable="true">${n}</div>
-                <div class="produto-img-wrapper" style="background-image: url('${uI}')"></div>
+                <div class="produto-img-wrapper" style="background-image: url('${uI}')" onclick="prepararTrocaImagem(this)" title="Clique para trocar a foto"></div>
                 <div class="area-precos-flex">
-                    <div class="bloco-preco"><div class="label-variacao" contenteditable="true">${l1}</div><div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p1}</div></div>
-                    ${p2 ? `<div class="bloco-preco"><div class="label-variacao" contenteditable="true">${l2}</div><div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p2}</div></div>` : ''}
+                    <div class="bloco-preco">
+                        ${l1 ? `<div class="label-variacao" contenteditable="true">${l1}</div>` : ''}
+                        <div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p1}</div>
+                    </div>
+                    ${p2 ? `
+                    <div class="bloco-preco">
+                        ${l2 ? `<div class="label-variacao" contenteditable="true">${l2}</div>` : ''}
+                        <div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p2}</div>
+                    </div>` : ''}
                 </div>`;
             document.getElementById('grid-produtos').appendChild(div);
 
@@ -301,11 +347,11 @@
 
         function exportar() {
             const el = document.getElementById('encarte');
-            const btns = document.querySelectorAll('.btn-excluir');
+            const btns = document.querySelectorAll('.btn-excluir, .btn-duplicar');
             btns.forEach(b => b.style.display = 'none');
             html2canvas(el, { scale: 4.5, useCORS: true }).then(c => {
                 const a = document.createElement('a'); a.download = 'encarte-final.png'; a.href = c.toDataURL(); a.click();
-                btns.forEach(b => b.style.display = 'block');
+                btns.forEach(b => b.style.display = 'block'); 
             });
         }
         function desfazer() { if(hist.length > 0) document.getElementById('grid-produtos').innerHTML = hist.pop(); }
