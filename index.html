@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --cor-fundo-prod: rgba(255, 255, 255, 1);
@@ -44,8 +46,10 @@
         .form-group input, .form-group select { width: 100%; padding: 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
         button { color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 4px; font-weight: bold; margin-bottom: 8px; transition: 0.2s; }
         .btn-add { background: #007bff; }
+        .btn-import { background: #6f42c1; } /* Cor roxa pro excel */
         .btn-exportar { background: #28a745; font-size: 16px; padding: 15px; margin-top: 10px; }
         .grid-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .aviso-excel { font-size: 9px; color: #666; margin-bottom: 8px; line-height: 1.2; }
 
         .prancheta-container { flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 20px; background: #ced4da; }
         
@@ -105,12 +109,8 @@
         .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
 
         .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
-        
-        /* NOVO BOTÃO DE ADICIONAR SELO */
         .btn-add-selo { position: absolute; top: -5px; right: 18px; background: #ffc107; color: black; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
-
         .btn-duplicar { position: absolute; top: -5px; left: -5px; background: #28a745; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
-
         .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; cursor: pointer; transition: opacity 0.2s; }
         .produto-selo-img:hover { opacity: 0.4; }
         
@@ -123,12 +123,6 @@
     <input type="file" id="input-trocar-selo" accept="image/*" style="display: none;" onchange="efetivarTrocaSelo(this)">
 
     <div class="painel">
-        <button onclick="desfazer()" style="background:#ffc107; color:black;">↩️ Desfazer</button>
-
-        <h3>1. Memória</h3>
-        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
-        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
-
         <h3>2. Layout Global</h3>
         <div class="form-group">
             <label>Formato do Encarte:</label>
@@ -144,7 +138,12 @@
         </div>
         <div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
 
-        <h3>3. Dados do Produto</h3>
+        <h3>3. Importar do Excel</h3>
+        <div class="aviso-excel">Colunas: A(Nome), B(Preço1), C(Leg1), D(Preço2), E(Leg2).<br>A 1ª linha deve ser o cabeçalho.</div>
+        <input type="file" id="in-excel" accept=".xlsx, .xls, .csv" style="margin-bottom: 5px;">
+        <button class="btn-import" onclick="importarPlanilha()">📥 Importar Produtos</button>
+
+        <h3>4. Adicionar Manual</h3>
         <input type="text" id="in-nome" placeholder="Nome do Produto" style="width:96%; padding:7px; margin-bottom:5px;">
         <div class="grid-dupla">
             <input type="text" id="in-p1" placeholder="Preço 1">
@@ -160,7 +159,7 @@
         </div>
         <button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
 
-        <h3>4. Ajustes do Selo</h3>
+        <h3>5. Ajustes do Selo</h3>
         <div class="grid-dupla">
             <input type="range" id="s-size" min="30" max="250" value="80" oninput="aplicarDesign()">
             <input type="range" id="s-rot" min="-180" max="180" value="-10" oninput="aplicarDesign()">
@@ -170,7 +169,7 @@
             <input type="range" id="s-y" min="-100" max="200" value="-10" oninput="aplicarDesign()">
         </div>
 
-        <h3>5. Cores e Transparência</h3>
+        <h3>6. Cores e Transparência</h3>
         <div class="grid-dupla">
             <div class="form-group"><label>Nome:</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
             <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
@@ -184,7 +183,7 @@
             <div class="form-group"><label>Borda:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
         </div>
 
-        <h3>6. Tipografia e Eixos</h3>
+        <h3>7. Tipografia e Eixos</h3>
         <div class="form-group">
             <select id="f-nome-tipo" onchange="aplicarDesign()">
                 <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
@@ -219,7 +218,7 @@
         let db = JSON.parse(localStorage.getItem('encarte_v_bg_fix')) || [];
         let hist = [], imgT = null, seloT = null;
         let divImagemAlvo = null; 
-        let cardSeloAlvo = null; // Variável para controlar em qual card o selo vai entrar
+        let cardSeloAlvo = null; 
 
         window.onload = () => {
             renderMemoria();
@@ -230,6 +229,75 @@
 
         const ler = (f) => new Promise(res => { if(!f) return res(null); const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
         const hexRgb = (h) => { let b = parseInt(h.replace('#', ''), 16); return `${(b>>16)&255}, ${(b>>8)&255}, ${b&255}`; };
+
+        // --- NOVA FUNÇÃO DE IMPORTAR PLANILHA ---
+        function importarPlanilha() {
+            const input = document.getElementById('in-excel');
+            const file = input.files[0];
+            if (!file) return alert("Por favor, selecione um arquivo Excel (.xlsx) primeiro!");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Converte a aba para um array (matriz)
+                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+                if(rows.length <= 1) return alert("A planilha parece estar vazia ou só tem o cabeçalho.");
+
+                hist.push(document.getElementById('grid-produtos').innerHTML); // Salva histórico para Desfazer
+
+                const imgPadrao = 'https://via.placeholder.com/150/e9ecef/6c757d?text=FOTO'; // Foto provisória neutra
+
+                // Começa o loop no índice 1 para pular a linha 0 (que é o cabeçalho)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length === 0) continue; // Pula linhas totalmente em branco
+
+                    // Pega os dados das colunas (forçando para virar texto)
+                    const n = row[0] ? String(row[0]).trim() : '';
+                    const p1 = row[1] ? String(row[1]).trim() : '';
+                    const l1 = row[2] ? String(row[2]).trim() : '';
+                    const p2 = row[3] ? String(row[3]).trim() : '';
+                    const l2 = row[4] ? String(row[4]).trim() : '';
+
+                    if (!n || !p1) continue; // Se não tiver Nome ou Preço 1, ele ignora a linha
+
+                    // Monta o Card
+                    const div = document.createElement('div');
+                    div.className = 'produto-item';
+                    
+                    div.innerHTML = `
+                        <button class="btn-duplicar" onclick="duplicarProduto(this)" title="Duplicar">✚</button>
+                        <button class="btn-excluir" onclick="removerProduto(this)" title="Excluir">✕</button>
+                        <button class="btn-add-selo" onclick="prepararTrocaSelo(this)" title="Adicionar ou Trocar Selo">🏷️</button>
+                        
+                        <div class="produto-nome" contenteditable="true">${n}</div>
+                        <div class="produto-img-wrapper" style="background-image: url('${imgPadrao}')" onclick="prepararTrocaImagem(this)" title="Clique para trocar a foto"></div>
+                        <div class="area-precos-flex">
+                            <div class="bloco-preco">
+                                ${l1 ? `<div class="label-variacao" contenteditable="true">${l1}</div>` : ''}
+                                <div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p1}</div>
+                            </div>
+                            ${p2 ? `
+                            <div class="bloco-preco">
+                                ${l2 ? `<div class="label-variacao" contenteditable="true">${l2}</div>` : ''}
+                                <div class="produto-preco" contenteditable="true"><span class="simbolo-moeda">R$</span>${p2}</div>
+                            </div>` : ''}
+                        </div>`;
+                    
+                    document.getElementById('grid-produtos').appendChild(div);
+                }
+                
+                atualizarGradeAutomatica(); // Organiza o layout para abraçar todos os novos produtos
+                input.value = ''; // Limpa o input do Excel
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        // ----------------------------------------
 
         async function trocarFundo(input) {
             const file = input.files[0];
@@ -255,25 +323,22 @@
             divImagemAlvo = null;
         }
 
-        // --- FUNÇÕES PARA ADICIONAR/TROCAR O SELO DIRETAMENTE NO CARD ---
         function prepararTrocaSelo(btn) {
-            cardSeloAlvo = btn.parentElement; // Pega o card inteiro
+            cardSeloAlvo = btn.parentElement; 
             document.getElementById('input-trocar-selo').click();
         }
 
         async function efetivarTrocaSelo(input) {
             const file = input.files[0];
             if (file && cardSeloAlvo) {
-                hist.push(document.getElementById('grid-produtos').innerHTML); // Salva histórico
+                hist.push(document.getElementById('grid-produtos').innerHTML); 
                 const url = await ler(file);
                 
-                // Se já existir um selo, remove ele antes de adicionar o novo
                 const seloExistente = cardSeloAlvo.querySelector('.produto-selo-img');
                 if (seloExistente) {
                     seloExistente.remove();
                 }
 
-                // Cria o novo selo e adiciona no card
                 const novoSelo = document.createElement('img');
                 novoSelo.src = url;
                 novoSelo.className = 'produto-selo-img';
@@ -285,7 +350,6 @@
             input.value = ''; 
             cardSeloAlvo = null;
         }
-        // ----------------------------------------------------------------
 
         function atualizarGradeAutomatica() {
             const grid = document.getElementById('grid-produtos');
@@ -389,7 +453,6 @@
 
             const div = document.createElement('div'); div.className = 'produto-item';
             
-            // INCLUÍDO O BOTÃO DA ETIQUETA AQUI
             div.innerHTML = `
                 <button class="btn-duplicar" onclick="duplicarProduto(this)" title="Duplicar">✚</button>
                 <button class="btn-excluir" onclick="removerProduto(this)" title="Excluir">✕</button>
@@ -444,7 +507,6 @@
 
         function exportar() {
             const el = document.getElementById('encarte');
-            // ADICIONADO O BOTÃO DA ETIQUETA NA LISTA DE OCULTAR ANTES DE BAIXAR
             const btns = document.querySelectorAll('.btn-excluir, .btn-duplicar, .btn-add-selo');
             btns.forEach(b => b.style.display = 'none');
             
