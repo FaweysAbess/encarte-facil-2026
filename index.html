@@ -29,8 +29,10 @@
             --tamanho-imagem-prod: 90%;
             --padding-topo-grid: 230px;
             --gap-produtos: 12px;
-            --grid-cols: 3; --grid-rows: 3;
+            --grid-cols: 1; --grid-rows: 1;
             --tamanho-selo: 80px; --selo-x: -10px; --selo-y: -10px; --selo-rot: -10deg;
+            
+            --encarte-width: 540px;
             --encarte-height: 960px;
         }
 
@@ -48,12 +50,13 @@
         .prancheta-container { flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 20px; background: #ced4da; }
         
         #encarte {
-            width: 540px; height: var(--encarte-height);
+            width: var(--encarte-width); height: var(--encarte-height);
             background-color: #fff; 
             background-size: 100% 100%; 
             background-position: center;
             background-repeat: no-repeat;
             position: relative; padding: var(--padding-topo-grid) 25px 50px 25px; box-sizing: border-box; 
+            transition: width 0.3s, height 0.3s; 
         }
 
         #grid-produtos { 
@@ -95,48 +98,44 @@
             min-width: 40%; max-width: 48%;
         }
 
-        /* REGRA NOVA: Esconde a legenda se ela estiver vazia, colando a caixa no preço */
         .label-variacao { font-size: 7px; font-weight: 900; text-transform: uppercase; color: var(--cor-texto-legenda); margin-bottom: -2px; }
         .label-variacao:empty { display: none; }
         
         .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; line-height: 1.1; }
         .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
 
-        .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
-        .btn-duplicar { position: absolute; top: -5px; left: -5px; background: #28a745; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
+        .btn-excluir { position: absolute; top: 0px; right: 0px; background: red; color: white; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
+        
+        /* NOVO BOTÃO DE ADICIONAR SELO */
+        .btn-add-selo { position: absolute; top: 0px; right: 35px; background: #ffc107; color: black; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
 
-        .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; pointer-events: none; }
+        .btn-duplicar { position: absolute; top: 0px; left: 0px; background: #664fff; color: white; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
+
+        .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; cursor: pointer; transition: opacity 0.2s; }
+        .produto-selo-img:hover { opacity: 0.4; }
+        
         .rodape-encarte { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; cursor: text; outline: none; font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
 <body>
 
     <input type="file" id="input-trocar-img" accept="image/*" style="display: none;" onchange="efetivarTrocaImagem(this)">
+    <input type="file" id="input-trocar-selo" accept="image/*" style="display: none;" onchange="efetivarTrocaSelo(this)">
 
     <div class="painel">
-        <button onclick="desfazer()" style="background:#ffc107; color:black;">↩️ Desfazer</button>
-
-        <h3>1. Memória</h3>
-        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
-        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
-
-        <h3>2. Layout Global</h3>
-        <div class="grid-dupla">
-            <select id="adj-grid" onchange="mudarGrid()">
-                <option value="2x2">Grade 2x2</option>
-                <option value="3x2">Grade 3x2</option>
-                <option value="3x3" selected>Grade 3x3</option>
-            </select>
+        <h3>Layout Encarte</h3>
+        <div class="form-group">
+            <label>Formato do Encarte:</label>
             <select id="adj-formato" onchange="mudarFormato()">
-                <option value="story">Story</option>
-                <option value="feed">Feed</option>
+                <option value="story">Story (9:16)</option>
+                <option value="feed">Feed Quadrado (1:1)</option>
+                <option value="feed-retrato">Feed Retrato (4:5)</option>
             </select>
         </div>
-        <div class="form-group"><label>Padding Top (Altura Grade):</label><input type="range" id="range-padding-top" min="50" max="500" value="230" oninput="aplicarDesign()"></div>
-        <div class="form-group"><label>Espaço entre Cards (Gap):</label><input type="range" id="range-gap" min="0" max="50" value="12" oninput="aplicarDesign()"></div>
-        <div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
+       
+        <br><div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
 
-        <h3>3. Dados do Produto</h3>
+        <br><h3>Dados do Produto</h3>
         <input type="text" id="in-nome" placeholder="Nome do Produto" style="width:96%; padding:7px; margin-bottom:5px;">
         <div class="grid-dupla">
             <input type="text" id="in-p1" placeholder="Preço 1">
@@ -146,13 +145,57 @@
             <input type="text" id="in-p2" placeholder="Preço 2 (Opcional)">
             <input type="text" id="in-l2" placeholder="Leg. 2">
         </div>
-        <div class="grid-dupla" style="margin-top:10px">
-            <div class="form-group"><label>Foto:</label><input type="file" id="in-img" accept="image/*"></div>
-            <div class="form-group"><label>Selo:</label><input type="file" id="in-selo" accept="image/*"></div>
-        </div>
-        <button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
+        <br>
+        <div class="form-group"><label><br>Imagem do Produto:</label><input type="file" id="in-img" accept="image/*"></div>
+        
+        <br><button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
 
-        <h3>4. Ajustes do Selo</h3>
+        <br><h3>Tipografia</h3>
+        <div class="form-group">
+            <h6>Fonte descrição</h6>
+            <select id="f-nome-tipo" onchange="aplicarDesign()">
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <h6>Fonte Preço R$</h6>
+            <select id="f-preco-tipo" onchange="aplicarDesign()">
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+            </select>
+        </div>
+
+        <h3>Cores e Transparência</h3>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Descrição</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Preço:</label><input type="color" id="clr-preco" value="#ffffff" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Box Preço:</label><input type="color" id="clr-box" value="#d90000" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Card Produto:</label><input type="color" id="clr-card" value="#ffffff" oninput="aplicarDesign()"><input type="range" id="op-card" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Borda do Card:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+        </div>
+
+        <h3>Alinhamentos</h3>
+        
+        <div class="grid-dupla">
+            <div class="form-group"><label>Tam Descrição:</label><input type="range" id="range-sz-nome" min="10" max="35" value="14" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Eixo Y Nome:</label><input type="range" id="range-dist-nome" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Eixo Y Preço:</label><input type="range" id="range-dist-preco" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
+
+         <div class="grid-dupla">
+            <div class="form-group"><label>Padding Top (Altura):</label><input type="range" id="range-padding-top" min="50" max="500" value="230" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Espaço Cards (Gap):</label><input type="range" id="range-gap" min="0" max="50" value="12" oninput="aplicarDesign()"></div>
+        </div>
+
+        <h3>Ajustes do Selo</h3>
         <div class="grid-dupla">
             <input type="range" id="s-size" min="30" max="250" value="80" oninput="aplicarDesign()">
             <input type="range" id="s-rot" min="-180" max="180" value="-10" oninput="aplicarDesign()">
@@ -162,40 +205,10 @@
             <input type="range" id="s-y" min="-100" max="200" value="-10" oninput="aplicarDesign()">
         </div>
 
-        <h3>5. Cores e Transparência</h3>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Nome:</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Preço:</label><input type="color" id="clr-preco" value="#ffffff" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Box:</label><input type="color" id="clr-box" value="#d90000" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Card:</label><input type="color" id="clr-card" value="#ffffff" oninput="aplicarDesign()"><input type="range" id="op-card" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Borda:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
-        </div>
+        <h3>1. Memória</h3>
+        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
+        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
 
-        <h3>6. Tipografia e Eixos</h3>
-        <div class="form-group">
-            <select id="f-nome-tipo" onchange="aplicarDesign()">
-                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <select id="f-preco-tipo" onchange="aplicarDesign()">
-                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
-            </select>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Tam Nome:</label><input type="range" id="range-sz-nome" min="10" max="35" value="14" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Eixo Y Nome:</label><input type="range" id="range-dist-nome" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Eixo Y Preço:</label><input type="range" id="range-dist-preco" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
 
         <button class="btn-exportar" onclick="exportar()">🚀 BAIXAR IMG</button>
     </div>
@@ -211,11 +224,13 @@
         let db = JSON.parse(localStorage.getItem('encarte_v_bg_fix')) || [];
         let hist = [], imgT = null, seloT = null;
         let divImagemAlvo = null; 
+        let cardSeloAlvo = null; // Variável para controlar em qual card o selo vai entrar
 
         window.onload = () => {
             renderMemoria();
             new Sortable(document.getElementById('grid-produtos'), { animation: 150, onStart: () => hist.push(document.getElementById('grid-produtos').innerHTML) });
             aplicarDesign();
+            atualizarGradeAutomatica();
         };
 
         const ler = (f) => new Promise(res => { if(!f) return res(null); const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
@@ -245,10 +260,100 @@
             divImagemAlvo = null;
         }
 
+        // --- FUNÇÕES PARA ADICIONAR/TROCAR O SELO DIRETAMENTE NO CARD ---
+        function prepararTrocaSelo(btn) {
+            cardSeloAlvo = btn.parentElement; // Pega o card inteiro
+            document.getElementById('input-trocar-selo').click();
+        }
+
+        async function efetivarTrocaSelo(input) {
+            const file = input.files[0];
+            if (file && cardSeloAlvo) {
+                hist.push(document.getElementById('grid-produtos').innerHTML); // Salva histórico
+                const url = await ler(file);
+                
+                // Se já existir um selo, remove ele antes de adicionar o novo
+                const seloExistente = cardSeloAlvo.querySelector('.produto-selo-img');
+                if (seloExistente) {
+                    seloExistente.remove();
+                }
+
+                // Cria o novo selo e adiciona no card
+                const novoSelo = document.createElement('img');
+                novoSelo.src = url;
+                novoSelo.className = 'produto-selo-img';
+                novoSelo.title = "Clique para remover o selo";
+                novoSelo.onclick = function() { removerSelo(this); };
+                
+                cardSeloAlvo.appendChild(novoSelo);
+            }
+            input.value = ''; 
+            cardSeloAlvo = null;
+        }
+        // ----------------------------------------------------------------
+
+        function atualizarGradeAutomatica() {
+            const grid = document.getElementById('grid-produtos');
+            const qtd = grid.children.length;
+            const s = document.documentElement.style;
+
+            let cols = 1;
+            let rows = 1;
+
+            if (qtd === 0 || qtd === 1) { cols = 1; rows = 1; }
+            else if (qtd === 2) { cols = 2; rows = 1; }
+            else if (qtd === 3) { cols = 3; rows = 1; }
+            else if (qtd === 4) { cols = 2; rows = 2; }
+            else if (qtd <= 6) { cols = 3; rows = 2; }
+            else if (qtd <= 8) { cols = 4; rows = 2; }
+            else if (qtd === 9) { cols = 3; rows = 3; }
+            else if (qtd <= 12) { cols = 4; rows = 3; }
+            else { 
+                cols = 4; 
+                rows = Math.ceil(qtd / 4); 
+            }
+
+            s.setProperty('--grid-cols', cols);
+            s.setProperty('--grid-rows', rows);
+        }
+
         function duplicarProduto(btn) {
             hist.push(document.getElementById('grid-produtos').innerHTML);
             const clone = btn.parentElement.cloneNode(true);
             document.getElementById('grid-produtos').appendChild(clone);
+            atualizarGradeAutomatica(); 
+        }
+
+        function removerProduto(btn) {
+            hist.push(document.getElementById('grid-produtos').innerHTML); 
+            btn.parentElement.remove();
+            atualizarGradeAutomatica(); 
+        }
+
+        function removerSelo(img) {
+            hist.push(document.getElementById('grid-produtos').innerHTML); 
+            img.remove(); 
+        }
+
+        function mudarFormato() {
+            const f = document.getElementById('adj-formato').value;
+            const s = document.documentElement.style;
+            const rangePadding = document.getElementById('range-padding-top');
+
+            if (f === 'story') {
+                s.setProperty('--encarte-width', '540px');
+                s.setProperty('--encarte-height', '960px');
+                rangePadding.value = 230; 
+            } else if (f === 'feed') {
+                s.setProperty('--encarte-width', '540px');
+                s.setProperty('--encarte-height', '540px');
+                rangePadding.value = 100; 
+            } else if (f === 'feed-retrato') {
+                s.setProperty('--encarte-width', '540px');
+                s.setProperty('--encarte-height', '675px');
+                rangePadding.value = 150; 
+            }
+            aplicarDesign(); 
         }
 
         function aplicarDesign() {
@@ -274,21 +379,13 @@
             s.setProperty('--selo-rot', document.getElementById('s-rot').value + 'deg');
         }
 
-        function mudarGrid() {
-            const g = document.getElementById('adj-grid').value;
-            const s = document.documentElement.style;
-            if(g === '2x2') { s.setProperty('--grid-cols', '2'); s.setProperty('--grid-rows', '2'); }
-            else if(g === '3x2') { s.setProperty('--grid-cols', '3'); s.setProperty('--grid-rows', '2'); }
-            else { s.setProperty('--grid-cols', '3'); s.setProperty('--grid-rows', '3'); }
-        }
-
         async function criarProduto() {
             hist.push(document.getElementById('grid-produtos').innerHTML);
             const n = document.getElementById('in-nome').value;
             const p1 = document.getElementById('in-p1').value;
-            const l1 = document.getElementById('in-l1').value.trim(); // Limpa espaços em branco
+            const l1 = document.getElementById('in-l1').value.trim();
             const p2 = document.getElementById('in-p2').value;
-            const l2 = document.getElementById('in-l2').value.trim(); // Limpa espaços em branco
+            const l2 = document.getElementById('in-l2').value.trim(); 
             
             const uI = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : (imgT || 'https://via.placeholder.com/150');
             const uS = document.getElementById('in-selo').files[0] ? await ler(document.getElementById('in-selo').files[0]) : seloT;
@@ -297,11 +394,14 @@
 
             const div = document.createElement('div'); div.className = 'produto-item';
             
-            // CONSTRUÇÃO CONDICIONAL DA LEGENDA: Só renderiza a div se l1 ou l2 tiverem texto
+            // INCLUÍDO O BOTÃO DA ETIQUETA AQUI
             div.innerHTML = `
                 <button class="btn-duplicar" onclick="duplicarProduto(this)" title="Duplicar">✚</button>
-                <button class="btn-excluir" onclick="this.parentElement.remove()" title="Excluir">✕</button>
-                ${uS ? `<img src="${uS}" class="produto-selo-img">` : ''}
+                <button class="btn-excluir" onclick="removerProduto(this)" title="Excluir">✕</button>
+                <button class="btn-add-selo" onclick="prepararTrocaSelo(this)" title="Adicionar ou Trocar Selo">🏷️</button>
+                
+                ${uS ? `<img src="${uS}" class="produto-selo-img" onclick="removerSelo(this)" title="Clique para remover o selo">` : ''}
+                
                 <div class="produto-nome" contenteditable="true">${n}</div>
                 <div class="produto-img-wrapper" style="background-image: url('${uI}')" onclick="prepararTrocaImagem(this)" title="Clique para trocar a foto"></div>
                 <div class="area-precos-flex">
@@ -324,6 +424,8 @@
             document.getElementById('in-l2').value = '';
             document.getElementById('in-img').value = '';
             imgT = null;
+            
+            atualizarGradeAutomatica(); 
         }
 
         async function salvarNaMemoria() {
@@ -347,14 +449,22 @@
 
         function exportar() {
             const el = document.getElementById('encarte');
-            const btns = document.querySelectorAll('.btn-excluir, .btn-duplicar');
+            // ADICIONADO O BOTÃO DA ETIQUETA NA LISTA DE OCULTAR ANTES DE BAIXAR
+            const btns = document.querySelectorAll('.btn-excluir, .btn-duplicar, .btn-add-selo');
             btns.forEach(b => b.style.display = 'none');
+            
             html2canvas(el, { scale: 4.5, useCORS: true }).then(c => {
                 const a = document.createElement('a'); a.download = 'encarte-final.png'; a.href = c.toDataURL(); a.click();
                 btns.forEach(b => b.style.display = 'block'); 
             });
         }
-        function desfazer() { if(hist.length > 0) document.getElementById('grid-produtos').innerHTML = hist.pop(); }
+        
+        function desfazer() { 
+            if(hist.length > 0) { 
+                document.getElementById('grid-produtos').innerHTML = hist.pop(); 
+                atualizarGradeAutomatica(); 
+            } 
+        }
     </script>
 </body>
 </html>
