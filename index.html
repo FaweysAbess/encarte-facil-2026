@@ -104,12 +104,12 @@
         .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; line-height: 1.1; }
         .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
 
-        .btn-excluir { position: absolute; top: 0px; right: 0px; background: red; color: white; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
+        .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
         
         /* NOVO BOTÃO DE ADICIONAR SELO */
-        .btn-add-selo { position: absolute; top: 0px; right: 35px; background: #ffc107; color: black; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
+        .btn-add-selo { position: absolute; top: -5px; right: 18px; background: #ffc107; color: black; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
 
-        .btn-duplicar { position: absolute; top: 0px; left: 0px; background: #664fff; color: white; border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; z-index: 20; font-size: 8px; }
+        .btn-duplicar { position: absolute; top: -5px; left: -5px; background: #28a745; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; }
 
         .produto-selo-img { position: absolute; top: var(--selo-y); left: var(--selo-x); width: var(--tamanho-selo); transform: rotate(var(--selo-rot)); z-index: 10; cursor: pointer; transition: opacity 0.2s; }
         .produto-selo-img:hover { opacity: 0.4; }
@@ -123,7 +123,13 @@
     <input type="file" id="input-trocar-selo" accept="image/*" style="display: none;" onchange="efetivarTrocaSelo(this)">
 
     <div class="painel">
-        <h3>Layout Encarte</h3>
+        <button onclick="desfazer()" style="background:#ffc107; color:black;">↩️ Desfazer</button>
+
+        <h3>1. Memória</h3>
+        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
+        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
+
+        <h3>2. Layout Global</h3>
         <div class="form-group">
             <label>Formato do Encarte:</label>
             <select id="adj-formato" onchange="mudarFormato()">
@@ -132,10 +138,13 @@
                 <option value="feed-retrato">Feed Retrato (4:5)</option>
             </select>
         </div>
-       
-        <br><div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Padding Top (Altura):</label><input type="range" id="range-padding-top" min="50" max="500" value="230" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Espaço Cards (Gap):</label><input type="range" id="range-gap" min="0" max="50" value="12" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="form-group"><label>Fundo do Encarte:</label><input type="file" id="in-bg-file" accept="image/*" onchange="trocarFundo(this)"></div>
 
-        <br><h3>Dados do Produto</h3>
+        <h3>3. Dados do Produto</h3>
         <input type="text" id="in-nome" placeholder="Nome do Produto" style="width:96%; padding:7px; margin-bottom:5px;">
         <div class="grid-dupla">
             <input type="text" id="in-p1" placeholder="Preço 1">
@@ -145,57 +154,13 @@
             <input type="text" id="in-p2" placeholder="Preço 2 (Opcional)">
             <input type="text" id="in-l2" placeholder="Leg. 2">
         </div>
-        <br>
-        <div class="form-group"><label><br>Imagem do Produto:</label><input type="file" id="in-img" accept="image/*"></div>
-        
-        <br><button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
+        <div class="grid-dupla" style="margin-top:10px">
+            <div class="form-group"><label>Foto:</label><input type="file" id="in-img" accept="image/*"></div>
+            <div class="form-group"><label>Selo:</label><input type="file" id="in-selo" accept="image/*"></div>
+        </div>
+        <button class="btn-add" onclick="criarProduto()">+ Adicionar ao Encarte</button>
 
-        <br><h3>Tipografia</h3>
-        <div class="form-group">
-            <h6>Fonte descrição</h6>
-            <select id="f-nome-tipo" onchange="aplicarDesign()">
-                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <h6>Fonte Preço R$</h6>
-            <select id="f-preco-tipo" onchange="aplicarDesign()">
-                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
-            </select>
-        </div>
-
-        <h3>Cores e Transparência</h3>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Descrição</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Preço:</label><input type="color" id="clr-preco" value="#ffffff" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Box Preço:</label><input type="color" id="clr-box" value="#d90000" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Card Produto:</label><input type="color" id="clr-card" value="#ffffff" oninput="aplicarDesign()"><input type="range" id="op-card" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Borda do Card:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
-        </div>
-
-        <h3>Alinhamentos</h3>
-        
-        <div class="grid-dupla">
-            <div class="form-group"><label>Tam Descrição:</label><input type="range" id="range-sz-nome" min="10" max="35" value="14" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="grid-dupla">
-            <div class="form-group"><label>Eixo Y Nome:</label><input type="range" id="range-dist-nome" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Eixo Y Preço:</label><input type="range" id="range-dist-preco" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
-        </div>
-        <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
-
-         <div class="grid-dupla">
-            <div class="form-group"><label>Padding Top (Altura):</label><input type="range" id="range-padding-top" min="50" max="500" value="230" oninput="aplicarDesign()"></div>
-            <div class="form-group"><label>Espaço Cards (Gap):</label><input type="range" id="range-gap" min="0" max="50" value="12" oninput="aplicarDesign()"></div>
-        </div>
-
-        <h3>Ajustes do Selo</h3>
+        <h3>4. Ajustes do Selo</h3>
         <div class="grid-dupla">
             <input type="range" id="s-size" min="30" max="250" value="80" oninput="aplicarDesign()">
             <input type="range" id="s-rot" min="-180" max="180" value="-10" oninput="aplicarDesign()">
@@ -205,10 +170,40 @@
             <input type="range" id="s-y" min="-100" max="200" value="-10" oninput="aplicarDesign()">
         </div>
 
-        <h3>1. Memória</h3>
-        <select id="select-memoria" onchange="carregarDaMemoria()" style="width:100%; margin-bottom:5px;"><option value="">Puxar da Memória...</option></select>
-        <button style="background:#6c757d; font-size:11px;" onclick="salvarNaMemoria()">💾 Salvar na Memória</button>
+        <h3>5. Cores e Transparência</h3>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Nome:</label><input type="color" id="clr-nome" value="#333333" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Legenda:</label><input type="color" id="clr-leg" value="#ffffff" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Preço:</label><input type="color" id="clr-preco" value="#ffffff" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Box:</label><input type="color" id="clr-box" value="#d90000" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Card:</label><input type="color" id="clr-card" value="#ffffff" oninput="aplicarDesign()"><input type="range" id="op-card" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Borda:</label><input type="color" id="clr-borda" value="#ffcc00" oninput="aplicarDesign()"><input type="range" id="op-borda" min="0" max="1" step="0.1" value="1" oninput="aplicarDesign()"></div>
+        </div>
 
+        <h3>6. Tipografia e Eixos</h3>
+        <div class="form-group">
+            <select id="f-nome-tipo" onchange="aplicarDesign()">
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <select id="f-preco-tipo" onchange="aplicarDesign()">
+                <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+            </select>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Tam Nome:</label><input type="range" id="range-sz-nome" min="10" max="35" value="14" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Tam Preço:</label><input type="range" id="range-sz-preco" min="15" max="65" value="28" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="grid-dupla">
+            <div class="form-group"><label>Eixo Y Nome:</label><input type="range" id="range-dist-nome" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
+            <div class="form-group"><label>Eixo Y Preço:</label><input type="range" id="range-dist-preco" min="-50" max="50" value="0" oninput="aplicarDesign()"></div>
+        </div>
+        <div class="form-group"><label>Tamanho da Imagem %:</label><input type="range" id="range-img-sz" min="40" max="100" value="90" oninput="aplicarDesign()"></div>
 
         <button class="btn-exportar" onclick="exportar()">🚀 BAIXAR IMG</button>
     </div>
