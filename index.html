@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encarte PRO - Precisão Numérica</title>
+    <title>Encarte PRO - Precisão Numérica e Pesos</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,8 @@
             --cor-fundo-box-preco: #d90000; 
             --fonte-nome: 'Montserrat', sans-serif;
             --fonte-preco: 'Anton', sans-serif;
+            --peso-nome: 900;
+            --peso-preco: 400;
             --sz-nome: 14px;
             --sz-preco: 28px;
             --dist-nome: 0px;
@@ -49,7 +51,6 @@
         .form-group label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 10px; color: #444; }
         .form-group input[type="text"], .form-group input[type="file"], .form-group select { width: 100%; padding: 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
         
-        /* Estilos dos controles duplos (Range + Número) */
         .input-duplo { display: flex; align-items: center; gap: 6px; }
         .input-duplo input[type="range"] { flex-grow: 1; margin: 0; }
         .input-duplo input[type="number"] { width: 50px; padding: 4px; font-size: 11px; text-align: center; border: 1px solid #ccc; border-radius: 4px; -moz-appearance: textfield; }
@@ -90,7 +91,7 @@
         }
 
         .produto-nome { 
-            font-family: var(--fonte-nome); font-size: var(--sz-nome); font-weight: 900; 
+            font-family: var(--fonte-nome); font-size: var(--sz-nome); font-weight: var(--peso-nome); 
             text-transform: uppercase; color: var(--cor-texto-nome); line-height: 1.1; width: 100%; 
             min-height: 24px; display: flex; align-items: center; justify-content: center; z-index: 2;
             transform: translateY(var(--dist-nome));
@@ -119,7 +120,7 @@
         .label-variacao { font-size: 7px; font-weight: 900; text-transform: uppercase; color: var(--cor-texto-legenda); margin-bottom: -2px; }
         .label-variacao:empty { display: none; }
         
-        .produto-preco { font-family: var(--fonte-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; line-height: 1.1; }
+        .produto-preco { font-family: var(--fonte-preco); font-weight: var(--peso-preco); font-size: var(--sz-preco); color: var(--cor-texto-preco); display: inline-flex; align-items: baseline; line-height: 1.1; }
         .simbolo-moeda { font-size: 0.45em; margin-right: 1px; }
 
         .btn-excluir { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; z-index: 20; font-size: 10px; display: flex; align-items: center; justify-content: center; }
@@ -250,13 +251,40 @@
             <div class="form-group">
                 <label>Fonte do Nome:</label>
                 <select id="f-nome-tipo" onchange="aplicarDesign()">
-                    <option value="'Montserrat'">Montserrat</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Fredoka One'">Fredoka One</option><option value="'Roboto'">Roboto</option>
+                    <option value="'Montserrat'">Montserrat</option>
+                    <option value="'Bebas Neue'">Bebas Neue</option>
+                    <option value="'Fredoka One'">Fredoka One</option>
+                    <option value="'Roboto'">Roboto</option>
+                    <option value="'Poppins'">Poppins</option>
                 </select>
             </div>
             <div class="form-group">
+                <label>Peso do Nome:</label>
+                <select id="f-nome-peso" onchange="aplicarDesign()">
+                    <option value="400">Normal (400)</option>
+                    <option value="700">Negrito (700)</option>
+                    <option value="900" selected>Black (900)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-dupla">
+            <div class="form-group">
                 <label>Fonte do Preço:</label>
                 <select id="f-preco-tipo" onchange="aplicarDesign()">
-                    <option value="'Anton'">Anton</option><option value="'Bebas Neue'">Bebas Neue</option><option value="'Montserrat'">Montserrat</option><option value="'Roboto'">Roboto</option>
+                    <option value="'Anton'">Anton</option>
+                    <option value="'Bebas Neue'">Bebas Neue</option>
+                    <option value="'Montserrat'">Montserrat</option>
+                    <option value="'Roboto'">Roboto</option>
+                    <option value="'Passion One'">Passion One</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Peso do Preço:</label>
+                <select id="f-preco-peso" onchange="aplicarDesign()">
+                    <option value="400" selected>Normal (400)</option>
+                    <option value="700">Negrito (700)</option>
+                    <option value="900">Black (900)</option>
                 </select>
             </div>
         </div>
@@ -529,8 +557,12 @@
             s.setProperty('--cor-texto-legenda', getV('clr-leg'));
             s.setProperty('--cor-texto-preco', getV('clr-preco'));
             s.setProperty('--cor-fundo-box-preco', getV('clr-box'));
+            
             s.setProperty('--fonte-nome', getV('f-nome-tipo'));
+            s.setProperty('--peso-nome', getV('f-nome-peso'));
             s.setProperty('--fonte-preco', getV('f-preco-tipo'));
+            s.setProperty('--peso-preco', getV('f-preco-peso'));
+            
             s.setProperty('--sz-nome', getV('range-sz-nome') + 'px');
             s.setProperty('--sz-preco', getV('range-sz-preco') + 'px');
             s.setProperty('--dist-nome', getV('range-dist-nome') + 'px');
