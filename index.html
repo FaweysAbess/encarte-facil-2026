@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encarte PRO - Precisão Numérica e Pesos</title>
+    <title>Encarte PRO - Alta Qualidade & Proporção Perfeita</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,13 +97,34 @@
             transform: translateY(var(--dist-nome));
         }
         
+        /* A MÁGICA PARA HTML2CANVAS NÃO ESPREMER A IMAGEM */
         .produto-img-wrapper { 
-            width: 100%; flex-grow: 1; background-size: contain; 
-            background-position: center; background-repeat: no-repeat; z-index: 1; 
-            cursor: pointer; transition: opacity 0.2s;
+            width: 100%; 
+            flex-grow: 1; 
+            display: flex; /* Transforma o wrapper num flex container */
+            align-items: center; /* Centraliza a imagem verticalmente */
+            justify-content: center; /* Centraliza a imagem horizontalmente */
+            position: relative; 
+            min-height: 0; /* IMPEDE O CONTEÚDO DE ESTOURAR O GRID */
+            z-index: 1; 
+            cursor: pointer;
         }
-        .produto-img-wrapper:hover { opacity: 0.8; }
         
+        .foto-produto {
+            max-width: 100%; /* Limita na largura do card */
+            max-height: 100%; /* Limita na altura do espaço disponível */
+            width: auto; /* Mantém a proporção nativa da imagem */
+            height: auto; /* Mantém a proporção nativa da imagem */
+            object-fit: contain;
+            pointer-events: none;
+            /* Renderização em alta qualidade */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            transform-origin: center center;
+            transition: opacity 0.2s;
+        }
+        .produto-img-wrapper:hover .foto-produto { opacity: 0.8; }
+
         .area-precos-flex { 
             display: flex; width: 100%; justify-content: center; align-items: flex-end;
             gap: 4px; z-index: 2; padding-bottom: 2px;
@@ -336,6 +357,9 @@
         let divImagemAlvo = null; 
         let cardSeloAlvo = null; 
 
+        // Placeholder padrão
+        const IMG_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2U5ZWNlZiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM2Yzc1N2QiPkZPVE88L3RleHQ+PC9zdmc+';
+
         window.onload = () => {
             new Sortable(document.getElementById('grid-produtos'), { 
                 animation: 150, 
@@ -348,7 +372,6 @@
         const ler = (f) => new Promise(res => { if(!f) return res(null); const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(f); });
         const hexRgb = (h) => { let b = parseInt(h.replace('#', ''), 16); return `${(b>>16)&255}, ${(b>>8)&255}, ${b&255}`; };
 
-        // Função para manter o Range e o Number sincronizados
         function syncVal(targetId, value) {
             document.getElementById(targetId).value = value;
             aplicarDesign();
@@ -390,7 +413,6 @@
                 if(rows.length <= 1) return alert("Planilha vazia!");
 
                 salvarHist();
-                const imgPadrao = 'https://via.placeholder.com/150/e9ecef/6c757d?text=FOTO';
 
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
@@ -398,7 +420,7 @@
 
                     const div = document.createElement('div');
                     div.className = 'produto-item';
-                    div.innerHTML = montarHtmlCard(row[0], row[1], row[2], row[3], row[4], imgPadrao, null);
+                    div.innerHTML = montarHtmlCard(row[0], row[1], row[2], row[3], row[4], IMG_PLACEHOLDER, null);
                     document.getElementById('grid-produtos').appendChild(div);
                 }
                 atualizarGradeAutomatica();
@@ -419,8 +441,13 @@
                 </div>
 
                 ${selo ? `<img src="${selo}" class="produto-selo-img" onclick="removerSelo(this)">` : ''}
+                
                 <div class="produto-nome" contenteditable="true">${n}</div>
-                <div class="produto-img-wrapper" data-scale="1" style="transform: scale(1); background-image: url('${img}')" onclick="prepararTrocaImagem(this)"></div>
+                
+                <div class="produto-img-wrapper" onclick="prepararTrocaImagem(this)">
+                    <img src="${img}" class="foto-produto" data-scale="1" style="transform: scale(1);">
+                </div>
+                
                 <div class="area-precos-flex">
                     <div class="bloco-preco">
                         <div class="label-variacao" contenteditable="true">${l1 || ''}</div>
@@ -437,14 +464,15 @@
         function alterarZoom(btn, delta) {
             salvarHist();
             const wrapper = btn.closest('.produto-item').querySelector('.produto-img-wrapper');
-            let currentScale = parseFloat(wrapper.getAttribute('data-scale')) || 1;
+            const img = wrapper.querySelector('img.foto-produto');
+            let currentScale = parseFloat(img.getAttribute('data-scale')) || 1;
             
             currentScale += delta;
             if (currentScale < 0.2) currentScale = 0.2; 
             if (currentScale > 4.0) currentScale = 4.0; 
             
-            wrapper.setAttribute('data-scale', currentScale.toFixed(2));
-            wrapper.style.transform = `scale(${currentScale})`;
+            img.setAttribute('data-scale', currentScale.toFixed(2));
+            img.style.transform = `scale(${currentScale})`;
         }
 
         async function trocarFundo(input) {
@@ -456,14 +484,14 @@
         }
 
         function prepararTrocaImagem(elemento) {
-            divImagemAlvo = elemento;
+            divImagemAlvo = elemento.querySelector('img.foto-produto');
             document.getElementById('input-trocar-img').click();
         }
 
         async function efetivarTrocaImagem(input) {
             if (input.files[0] && divImagemAlvo) {
                 salvarHist();
-                divImagemAlvo.style.backgroundImage = `url('${await ler(input.files[0])}')`;
+                divImagemAlvo.src = await ler(input.files[0]);
             }
             input.value = ''; divImagemAlvo = null;
         }
@@ -551,8 +579,8 @@
             const s = document.documentElement.style;
             const getV = (id) => document.getElementById(id).value;
             
-            s.setProperty('--cor-fundo-prod', `rgba(${hexRgb(getV('clr-card'))}, ${getV('op-card')})`);
-            s.setProperty('--cor-borda-prod', `rgba(${hexRgb(getV('clr-borda'))}, ${getV('op-borda')})`);
+            s.setProperty('--cor-fundo-prod', `rgba(${hexRgb(getV('clr-card'))}, ${getV('num-op-card')})`);
+            s.setProperty('--cor-borda-prod', `rgba(${hexRgb(getV('clr-borda'))}, ${getV('num-op-borda')})`);
             s.setProperty('--cor-texto-nome', getV('clr-nome'));
             s.setProperty('--cor-texto-legenda', getV('clr-leg'));
             s.setProperty('--cor-texto-preco', getV('clr-preco'));
@@ -563,16 +591,16 @@
             s.setProperty('--fonte-preco', getV('f-preco-tipo'));
             s.setProperty('--peso-preco', getV('f-preco-peso'));
             
-            s.setProperty('--sz-nome', getV('range-sz-nome') + 'px');
-            s.setProperty('--sz-preco', getV('range-sz-preco') + 'px');
-            s.setProperty('--dist-nome', getV('range-dist-nome') + 'px');
-            s.setProperty('--dist-preco', getV('range-dist-preco') + 'px');
-            s.setProperty('--padding-topo-grid', getV('range-padding-top') + 'px');
-            s.setProperty('--gap-produtos', getV('range-gap') + 'px');
-            s.setProperty('--tamanho-selo', getV('s-size') + 'px');
-            s.setProperty('--selo-x', getV('s-x') + 'px');
-            s.setProperty('--selo-y', getV('s-y') + 'px');
-            s.setProperty('--selo-rot', getV('s-rot') + 'deg');
+            s.setProperty('--sz-nome', getV('num-sz-nome') + 'px');
+            s.setProperty('--sz-preco', getV('num-sz-preco') + 'px');
+            s.setProperty('--dist-nome', getV('num-dist-nome') + 'px');
+            s.setProperty('--dist-preco', getV('num-dist-preco') + 'px');
+            s.setProperty('--padding-topo-grid', getV('num-padding-top') + 'px');
+            s.setProperty('--gap-produtos', getV('num-gap') + 'px');
+            s.setProperty('--tamanho-selo', getV('num-s-size') + 'px');
+            s.setProperty('--selo-x', getV('num-s-x') + 'px');
+            s.setProperty('--selo-y', getV('num-s-y') + 'px');
+            s.setProperty('--selo-rot', getV('num-s-rot') + 'deg');
         }
 
         async function criarProduto() {
@@ -581,7 +609,7 @@
             if(!n || !p1) return alert("Nome e Preço obrigatórios!");
 
             salvarHist();
-            const uI = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : 'https://via.placeholder.com/150';
+            const uI = document.getElementById('in-img').files[0] ? await ler(document.getElementById('in-img').files[0]) : IMG_PLACEHOLDER;
             const uS = document.getElementById('in-selo').files[0] ? await ler(document.getElementById('in-selo').files[0]) : null;
 
             const div = document.createElement('div');
@@ -600,7 +628,7 @@
             btns.forEach(b => b.style.opacity = '0');
             
             const configAltaQualidade = {
-                scale: 4.5,
+                scale: 3, 
                 useCORS: true, 
                 allowTaint: true,
                 backgroundColor: null,
@@ -611,11 +639,13 @@
                 btns.forEach(b => b.style.opacity = '1'); 
                 
                 const imgData = canvas.toDataURL('image/png', 1.0);
-                
                 const a = document.createElement('a'); 
-                a.download = 'encarte-alta-resolucao.png'; 
+                a.download = `encarte-pro-${Date.now()}.png`; 
                 a.href = imgData; 
                 a.click();
+            }).catch(err => {
+                btns.forEach(b => b.style.opacity = '1');
+                alert("Erro ao exportar.");
             });
         }
     </script>
